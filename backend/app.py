@@ -33,6 +33,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import github_backup
 from schedule_parser import ParseError, parse_schedule_file
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -61,9 +62,11 @@ _tokens: dict[str, float] = {}  # token -> expiry ts
 
 
 def _save_state() -> None:
-    STATE_FILE.write_text(
-        json.dumps(state, ensure_ascii=False), encoding="utf-8"
-    )
+    content = json.dumps(state, ensure_ascii=False)
+    STATE_FILE.write_text(content, encoding="utf-8")
+    # асинхронный бэкап в GitHub (если настроен): серия сохранений
+    # «схлопывается» в один коммит, ответ API не блокируется
+    github_backup.schedule_backup(content)
 
 
 def _load_state() -> None:
@@ -77,7 +80,20 @@ def _load_state() -> None:
             pass
 
 
+def _restore_state_if_needed() -> None:
+    """На эфемерных хостингах: при старте без локального state — тянем из GitHub."""
+    if STATE_FILE.exists():
+        return
+    if not github_backup.enabled():
+        return
+    blob = github_backup.restore_state()
+    if blob:
+        STATE_FILE.write_bytes(blob)
+        _load_state()
+
+
 _load_state()
+_restore_state_if_needed()
 
 
 # ------------------------------------------------------------------ авторизация
@@ -171,6 +187,7 @@ def admin_status(_: None = Depends(require_admin)) -> dict:
         "teachers": _stats_of("teachers"),
         "subjects": _stats_of("subjects"),
         "updated_at": state["updated_at"],
+        "backup": github_backup.backup_status(),
     }
 
 

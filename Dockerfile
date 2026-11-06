@@ -9,8 +9,9 @@ COPY backend/ backend/
 COPY frontend/ frontend/
 
 ENV ADMIN_PASSWORD=admin123
-ENV PORT=8000
-EXPOSE 8000
+# Порт 7860 — стандарт Hugging Face Spaces; локально можно переопределить: -e PORT=8000
+ENV PORT=7860
+EXPOSE 7860
 
 WORKDIR /app/backend
 CMD ["python", "app.py"]
