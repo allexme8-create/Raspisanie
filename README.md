@@ -10,6 +10,8 @@ pinned: false
 
 # 🗓️ Расписание лицея — веб-приложение (Frontend + Backend)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/allexme8-create/Raspisanie)
+
 Веб-приложение для публикации расписания уроков лицея.
 
 - **Администратор** через админ-панель загружает два файла расписания

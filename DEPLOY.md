@@ -1,113 +1,90 @@
 # 🚀 Публикация расписания на бесплатном хостинге
 
-Рекомендованный вариант: **Hugging Face Spaces** — бесплатно, без банковской карты,
-не «засыпает» (сайт открывается мгновенно в любое время), поддерживает Docker.
-Готовый адрес будет вида: `https://<ваш-логин>-raspisanie.hf.space`
+**Рекомендуемый вариант: Render** — подключается к GitHub в пару кликов, сам читает
+наш `Dockerfile`, без карты и без командной строки. Готовый адрес:
+`https://raspisanie-xxxx.onrender.com`
 
-Нужно ~10 минут и один раз выполнить шаги ниже.
+> ⚠️ Hugging Face Spaces тоже поддержан (инструкция ниже), но с 2026 года там
+> ужесточена бесплатная CPU-квота — у новых аккаунтов Space может не запускаться
+> с ошибкой «You've reached your base CPU quota». Поэтому Render — надёжнее.
 
 ---
 
-## Вариант A. Hugging Face Spaces (рекомендуется)
+## Вариант A. Render (рекомендуется)
 
 ### Шаг 1. Регистрация
-Откройте https://huggingface.co/join — нужен только e-mail и пароль.
+Откройте https://render.com → **Get Started** → удобнее всего **Sign up with GitHub**
+(тогда Render сразу увидит ваш репозиторий).
 
-### Шаг 2. Создайте Space
-1. https://huggingface.co/new-space
-2. **Space name**: `raspisanie` (логика: `<логин>-raspisanie.hf.space`)
-3. **SDK**: выберите **Docker** → шаблон **Blank**
-4. **Visibility**: `Public`
-5. Нажмите **Create Space**
+### Шаг 2. Деплой по кнопке
+1. Нажмите большую кнопку **«Deploy to Render»** вверху
+   [README репозитория](https://github.com/allexme8-create/Raspisanie#readme)
+   (или прямую ссылку: https://render.com/deploy?repo=https://github.com/allexme8-create/Raspisanie)
+2. Render найдёт `render.yaml` и покажет форму **New Blueprint Instance**:
+   - **Name**: `raspisanie` (только латиница и дефисы)
+   - подтвердите → **Apply**
+3. Начнётся сборка (3–5 минут, виден лог). Статус → **Live** ✅.
 
-### Шаг 3. Подключите GitHub → Space (без командной строки, всё в браузере)
+### Шаг 3. Задайте 2 секретные переменные
+Страница сервиса → слева **Environment** → **Add Environment Variable**:
 
-В репозитории уже есть готовый автоматический сценарий публикации
-(`.github/workflows/deploy-hf.yml`) — он сам зальёт код в ваш Space.
-
-**3.1.** Создайте HF-токен: откройте https://huggingface.co/settings/tokens →
-**Create new token** → тип **Write** → любое имя → **Create token** →
-**скопируйте токен** (показывается один раз).
-
-**3.2.** Добавьте два секрета в GitHub-репозиторий:
-https://github.com/allexme8-create/Raspisanie/settings/secrets/actions/new
-
-| Name | Secret (значение) |
+| Key | Value |
 |---|---|
-| `HF_USERNAME` | ваш логин на huggingface.co (например `allexme8`) |
-| `HF_TOKEN` | токен из шага 3.1 |
+| `ADMIN_PASSWORD` | ваш секретный пароль для входа в `/admin` |
+| `BACKUP_GH_TOKEN` | GitHub-токен classic с правом `repo` (https://github.com/settings/tokens → Generate new token (classic) → галочка **repo**). Нужен для автобэкапа расписания — Render free тоже с эфемерным диском |
 
-(секреты добавляются по одному: New repository secret → заполнить → Add secret)
+**Save Changes** → сервис перезапустится сам.
 
-**3.3.** Запустите публикацию:
-https://github.com/allexme8-create/Raspisanie/actions → слева выберите
-**🚀 Deploy to Hugging Face Spaces** → справа **Run workflow** → ветка `main` → зелёная кнопка.
-Через ~30 секунд шаг станет зелёным ✅ — код ушёл в Space, и началась сборка (ещё 2–4 минуты).
+### Шаг 4. Готово
+- Сайт: **https://raspisanie.onrender.com** (точный адрес — сверху слева на странице сервиса)
+- Админка: `/admin` → пароль из `ADMIN_PASSWORD` → загрузите оба файла расписания.
 
-> Дальше магия: любое будущее изменение в `main` будет **само** улетать на сайт.
+> ℹ️ Особенность free-тарифа: при 15 минутах без посетителей сервис «засыпает»,
+> первый заход после сна — ~30–60 секунд. Для школьного расписания обычно ок;
+> при желании бесплатный https://uptimerobot.com может «пинговать» сайт каждые
+> 5 минут (`https://.../healthz`) и держать его тёплым.
 
-<details>
-<summary>Альтернатива: через командную строку (если установлен Git)</summary>
+---
+
+## Вариант B. Hugging Face Spaces (если квота позволит)
+
+Полностью без командной строки, через GitHub Actions (`.github/workflows/deploy-hf.yml`):
+
+1. Создайте Space: https://huggingface.co/new-space → имя `raspisanie` (маленькими!),
+   SDK **Docker** → Blank, Public.
+2. HF-токен: https://huggingface.co/settings/tokens → Create new token → **Write**.
+3. Секреты в GitHub (https://github.com/allexme8-create/Raspisanie/settings/secrets/actions):
+   `HF_USERNAME` = ваш логин HF, `HF_TOKEN` = токен. Если имя Space ≠ `raspisanie` —
+   добавьте `HF_SPACE_NAME` с точным именем.
+4. Actions → **🚀 Deploy to Hugging Face Spaces** → **Run workflow**.
+5. Секреты Space (Settings → Variables and secrets): `ADMIN_PASSWORD`,
+   `BACKUP_GH_TOKEN`, `BACKUP_GH_REPO=allexme8-create/Raspisanie` → Restart.
+6. Адрес: `https://ЛОГИН-raspisanie.hf.space`.
+
+⚠️ При ошибке `You've reached your base CPU quota` — поставьте на паузу/удалите
+остальные Spaces и повторите через 10–15 минут; если не помогает — это текущая
+политика HF для free-аккаунтов, используйте вариант A.
+
+## Вариант C. Любой VPS / свой сервер
 
 ```bash
 git clone https://github.com/allexme8-create/Raspisanie.git
 cd Raspisanie
-git remote add hf https://huggingface.co/spaces/ВАШ_ЛОГИН/raspisanie
-git push hf main
+docker build -t raspisanie .
+docker run -d -p 8000:8000 \
+  -e PORT=8000 -e ADMIN_PASSWORD="секрет" \
+  -e BACKUP_GH_TOKEN=... -e BACKUP_GH_REPO=allexme8-create/Raspisanie \
+  -v raspisanie_data:/app/backend/data \
+  --restart unless-stopped raspisanie
 ```
-Имя — логин HF, пароль — Access Token (Write).
-</details>
-
-### Шаг 4. Задайте секреты (пароль админки и бэкап)
-Страница Space → **Settings** → **Variables and secrets** → **New secret**:
-
-| Имя | Значение |
-|---|---|
-| `ADMIN_PASSWORD` | ваш секретный пароль для входа в `/admin` |
-| `BACKUP_GH_TOKEN` | GitHub-токен (ниже) — чтобы расписание переживало перезапуск |
-| `BACKUP_GH_REPO` | `allexme8-create/Raspisanie` |
-| `BACKUP_GH_BRANCH` | `schedule-data` |
-
-**GitHub-токен для бэкапа:**
-https://github.com/settings/tokens → **Generate new token (classic)** → галочка `repo` →
-Generate → скопируйте (он показывается один раз!).
-
-> Зачем бэкап: у бесплатного Spaces эфемерный диск. Без бэкапа после рестарта/обновления
-> Space админу придётся загружать файлы заново. С бэкапом сервер при старте сам
-> подтянет последнее расписание из ветки `schedule-data` вашего GitHub-репозитория.
-> Админка покажет статус бэкапа (☁️) вверху панели.
-
-### Шаг 5. Готово
-Через 2–4 минуты сборки откройте: `https://ВАШ_ЛОГИН-raspisanie.hf.space`
-
-- клиент: `https://ВАШ_ЛОГИН-raspisanie.hf.space/`
-- админка: `https://ВАШ_ЛОГИН-raspisanie.hf.space/admin` → пароль из `ADMIN_PASSWORD`
-  → загрузите оба файла расписания.
-
----
-
-## Вариант B. Render (free) — если HF недоступен
-
-1. https://render.com → регистрация (можно через GitHub).
-2. **New → Web Service** → подключите репозиторий `Raspisanie`.
-3. Render сам найдёт `Dockerfile`. Instance type: **Free**.
-4. Environment Variables: `ADMIN_PASSWORD`, при желании `BACKUP_*` (см. выше).
-5. Deploy → адрес `https://raspisanie-xxxx.onrender.com`.
-
-⚠️ Минус free-тарифа Render: сервис засыпает после 15 минут без трафика —
-первый запрос после сна «прогревает» его ~30–60 секунд.
-
-## Вариант C. PythonAnywhere (free) — для любителей классики
-
-Аккаунт → Files: загрузить проект → Bash-консоль: `pip install -r backend/requirements.txt`
-→ веб-вкладка: настроить WSGI на `backend/app.py` (ASGI → ASGI wrapper).
-Подходит, если хочется адрес `логин.pythonanywhere.com`, но настройки больше.
 
 ---
 
 ## Проверка после деплоя
 
-1. Откройте `/api/status` на вашем домене — должно быть `{"ready":false,...}` до первой загрузки.
-2. Войдите в `/admin`, загрузите `samples/Пример_учителя.xlsx` и `samples/Пример_предметы.xlsx`.
-3. На главной странице появится расписание; в админке — зелёные карточки файлов и ☁️-статус бэкапа.
-4. Замените примеры настоящими файлами расписания — посетители увидят обновление сразу.
+1. Откройте `/api/status` — пока расписание не загружено админом: `{"ready":false,...}`.
+2. `/admin` → войдите → загрузите `samples/Пример_учителя.xlsx` и `samples/Пример_предметы.xlsx`.
+3. Главная страница показывает расписание; в админке — ☁️-статус автобэкапа в GitHub.
+4. Замените примеры настоящими файлами — посетители увидят обновление мгновенно.
+5. Перезагрузите сервис (Render: Manual Deploy → Restart) — расписание должно
+   восстановиться само из ветки `schedule-data` (проверка автобэкапа).
