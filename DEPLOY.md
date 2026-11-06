@@ -20,28 +20,43 @@
 4. **Visibility**: `Public`
 5. Нажмите **Create Space**
 
-### Шаг 3. Залейте код в Space
-На своём компьютере (нужен установленный [Git](https://git-scm.com/downloads)):
+### Шаг 3. Подключите GitHub → Space (без командной строки, всё в браузере)
+
+В репозитории уже есть готовый автоматический сценарий публикации
+(`.github/workflows/deploy-hf.yml`) — он сам зальёт код в ваш Space.
+
+**3.1.** Создайте HF-токен: откройте https://huggingface.co/settings/tokens →
+**Create new token** → тип **Write** → любое имя → **Create token** →
+**скопируйте токен** (показывается один раз).
+
+**3.2.** Добавьте два секрета в GitHub-репозиторий:
+https://github.com/allexme8-create/Raspisanie/settings/secrets/actions/new
+
+| Name | Secret (значение) |
+|---|---|
+| `HF_USERNAME` | ваш логин на huggingface.co (например `allexme8`) |
+| `HF_TOKEN` | токен из шага 3.1 |
+
+(секреты добавляются по одному: New repository secret → заполнить → Add secret)
+
+**3.3.** Запустите публикацию:
+https://github.com/allexme8-create/Raspisanie/actions → слева выберите
+**🚀 Deploy to Hugging Face Spaces** → справа **Run workflow** → ветка `main` → зелёная кнопка.
+Через ~30 секунд шаг станет зелёным ✅ — код ушёл в Space, и началась сборка (ещё 2–4 минуты).
+
+> Дальше магия: любое будущее изменение в `main` будет **само** улетать на сайт.
+
+<details>
+<summary>Альтернатива: через командную строку (если установлен Git)</summary>
 
 ```bash
-# скачать проект с GitHub
 git clone https://github.com/allexme8-create/Raspisanie.git
 cd Raspisanie
-
-# добавить Hugging Face как второй удалённый репозиторий
-#   (вместо ВАШ_ЛОГИН подставьте свой логин HF)
 git remote add hf https://huggingface.co/spaces/ВАШ_ЛОГИН/raspisanie
-
-# залить (при запросе пароля используйте Access Token, см. ниже)
 git push hf main
 ```
-
-> Имя пользователя при push — ваш логин HF; **пароль — это Access Token**:
-> https://huggingface.co/settings/tokens → «Create new token» → тип **Write** → скопировать.
-
-Альтернатива без командной строки: на странице Space → вкладка **Files** → **Add file** →
-**Upload files** → перетащите все файлы проекта (сохранив структуру папок
-`backend/…`, `frontend/…`, `Dockerfile`, `README.md`). Это утомительно, но тоже работает.
+Имя — логин HF, пароль — Access Token (Write).
+</details>
 
 ### Шаг 4. Задайте секреты (пароль админки и бэкап)
 Страница Space → **Settings** → **Variables and secrets** → **New secret**:
