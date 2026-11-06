@@ -59,7 +59,15 @@ async function loadStatus(){
         </div>`);
       }
     }
-    $("filesList").innerHTML=list.join("");
+    if(st.backup){
+      const b=st.backup;
+      $("filesList").insertAdjacentHTML("beforeend",
+        `<div class="alert" style="margin:4px 0 0;background:${b.enabled?"#eef0ff":"#f4f5fa"};border-color:${b.enabled?"#c7cde2":"var(--line)"}">`+
+        (b.enabled
+          ? `☁️ <b>Автобэкап включён</b>: после каждой загрузки расписание сохраняется в GitHub (<span class="mono">${esc(b.repo)}</span>, ветка <span class="mono">${esc(b.branch)}</span>) и восстановится само после перезапуска хостинга.`
+          : `☁️ Автобэкап в GitHub не настроен — после перезапуска хостинга файлы нужно будет загрузить заново. Настройка описана в DEPLOY.md.`)+
+        `</div>`);
+    }
     $("filesList").querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
       if(!confirm(`Удалить файл «${KIND_LABEL[b.dataset.del]}»?`)) return;
       try{ await api(`/api/admin/file/${b.dataset.del}`,{method:"DELETE"}); toast("Файл удалён"); }
